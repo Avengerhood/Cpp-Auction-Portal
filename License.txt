@@ -1,0 +1,75 @@
+[PL]
+
+Licencja Oprogramowania
+
+Definicje: 
+
+* "Oprogramowanie" odnosi się do kodu źródłowego udostępnionego w ramach tego repozytorium na GitHub.
+* "Autor" oznacza Krzysztofa Ambroziaka, właściciela praw autorskich do Oprogramowania.
+* "Dystrybucja" oznacza udostępnianie Oprogramowania innym osobom, zarówno w formie oryginalnej, jak i zmodyfikowanej.
+
+1. Prawa autorskie:
+-- Wszystkie prawa autorskie do Oprogramowania należą do Autora.
+
+2. Licencjonowanie: 
+-- Autor udziela Ci niewyłącznej, nieprzenoszalnej licencji na używanie Oprogramowania wyłącznie do celów niekomercyjnych.
+
+3. Wymóg podania autora:
+-- Przy każdej Dystrybucji lub publicznym wyświetleniu zmodyfikowanych lub niezmodyfikowanych wersji Oprogramowania, musisz wyraźnie wskazać, że Krzysztof Ambroziak jest autorem oryginalnego Oprogramowania.
+
+4. Zakaz użycia komercyjnego:
+-- Oprogramowanie jest udostępnione wyłącznie do użytku niekomercyjnego. Używanie Oprogramowania w celach komercyjnych bez uprzedniej zgody Autora jest zabronione.
+
+5. Zakaz dystrybucji:
+-- Dystrybucja Oprogramowania jest dozwolona pod warunkiem, że każda kopia zawiera niniejszą Licencję oraz wyraźnie wskazuje na Autora jako źródło.
+
+6. Ograniczenia: 
+-- Nie wolno Ci sprzedawać, wynajmować, ani sublicencjonować Oprogramowania.
+-- Nie wolno Ci wykorzystywać Oprogramowania w sposób, który narusza prawa autorskie, znaki towarowe, prawa patentowe lub inne prawa własności intelektualnej.
+
+7. Zrzeczenie się gwarancji: 
+-- Oprogramowanie jest dostarczane "tak, jak jest", bez jakiejkolwiek gwarancji.
+
+8. Ograniczenie odpowiedzialności:
+-- Autor nie będzie odpowiedzialny za żadne szkody wynikające z użycia lub niemożności użycia Oprogramowania.
+
+Kontakt:
+Wszelkie pytania dotyczące tej Licencji lub Oprogramowania należy kierować na adres e-mail: kryzo123456@gmail.com.
+
+[ENG]
+
+Software License
+
+Definitions:
+
+* "Software" refers to the source code made available in this GitHub repository.
+* "Author" means Krzysztof Ambroziak, the copyright owner of the Software.
+* "Distribution" means providing the Software to others, both in its original and modified forms.
+
+1. Copyrights:
+-- All copyright to the Software belongs to the Author.
+
+2. Licensing:
+-- The Author grants you a non-exclusive, non-transferable license to use the Software for non-commercial purposes only.
+
+3. Requirement to Credit the Author:
+-- In any Distribution or public display of the modified or unmodified versions of the Software, you must clearly indicate that Krzysztof Ambroziak is the author of the original Software.
+
+4. Prohibition of Commercial Use:
+-- The Software is made available exclusively for non-commercial use. Using the Software for commercial purposes without the prior consent of the Author is prohibited.
+
+5. Prohibition of Distribution:
+-- Distribution of the Software is permitted provided that each copy includes this License and clearly indicates the Author as the source.
+
+6. Restrictions:
+-- You may not sell, rent, or sublicense the Software.
+-- You may not use the Software in a manner that infringes copyright, trademarks, patent rights, or any other intellectual property rights.
+
+7. Disclaimer of Warranty:
+-- The Software is provided "as is", without any warranty.
+
+8. Limitation of Liability:
+-- The Author will not be liable for any damages resulting from the use or inability to use the Software.
+
+Contact:
+For any questions regarding this License or the Software, please contact via email: kryzo123456@gmail.com.
