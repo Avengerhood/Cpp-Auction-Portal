@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="pl">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description" content="" />
+        <meta name="author" content="" />
+        <title>SklepNa++</title>
+        <!-- Favicon-->
+        <link rel="icon" type="image/x-icon" href="static/assets/favicon.ico" />
+        <link href="static/assets/home/css/main.css" rel="stylesheet" />
+        <script type="text/javascript" src="static/assets/home/js/darkmode_head.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script> <!-- Include jQuery -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-dark@5/dark.css" />
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.js" defer></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+        <style>
+          .eye circle:nth-of-type(2) {
+            fill: var(--glint);
+          }
+
+          .form-group {
+              display: flex;
+              align-items: center;
+          }
+
+          .button2 {
+              padding: 0;
+              display: grid;
+              place-items: center;
+              height: 40px; /* Dostosuj wysokość przycisku */
+              width: 40px; /* Dostosuj szerokość przycisku */
+              margin-left: 8px; /* Odstęp od pola tekstowego */
+              /* Pozostałe style pozostają bez zmian */
+          }
+
+          input::selection {
+            background: var(--selection);
+          }
+
+          button2:is(:focus-visible, :hover) {
+            --active: 1;
+          }
+
+          button svg {
+            width: 75%;
+          }
+          
+          .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+          }
+        </style>
+
+    </head>
+
+    <body class="bg-white dark:bg-gray-900 transition-all duration-900 ease-in-out">
+        
+        <nav class="bg-white border-gray-200 dark:bg-gray-900 sticky top-0 z-50">
+            <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
+            <a href="/" class="flex items-center">
+                <img src="static/assets/home/images/logo.png" class="h-8 mr-3" alt="SklepNa++" />
+                <span class="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">Sklep·Na·++</span>
+            </a>
+            <div class="flex items-center md:order-2">
+                <button id="theme-toggle" type="button" class="text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 rounded-lg text-sm p-2.5 transition-all duration-900 ease-in-out mr-2">
+                    <svg id="theme-toggle-dark-icon" class="hidden w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+                    <svg id="theme-toggle-light-icon" class="hidden w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
+                    <span class="sr-only">Tryb Jasny/Ciemny</span>
+                </button>
+
+                {{^logged_in}}
+                <button data-modal-target="authentication-modal" data-modal-toggle="authentication-modal" class="block text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800" type="button">
+                    Zaloguj się
+                </button>
+
+                <a href="/register" target="_parent">
+                    <button type="submit" class="block text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800" type="button">
+                        Zarejestruj się
+                    </button>
+                </a>
+                {{/logged_in}}
+
+                {{#logged_in}}
+                <button type="button" class="flex mr-3 text-sm bg-gray-800 rounded-full md:mr-0 focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600" id="user-menu-button" aria-expanded="false" data-dropdown-toggle="user-dropdown" data-dropdown-placement="bottom">
+                  <span class="sr-only">Menu Użytkownika</span>
+                  <img class="w-8 h-8 rounded-full" src="static/assets/home/img/avatar.png" alt="user photo">
+                </button>
+                
+                <!-- Dropdown menu -->
+                <div class="z-50 hidden my-4 text-base list-none bg-white divide-y divide-gray-100 rounded-lg shadow dark:bg-gray-700 dark:divide-gray-600" id="user-dropdown">
+                  <div class="px-4 py-3">
+                    <span class="block text-sm text-gray-900 dark:text-white">{{username}}</span>
+                    <span class="block text-sm  text-gray-500 truncate dark:text-gray-400">{{email}}</span>
+                  </div>
+                  <ul class="py-2" aria-labelledby="user-menu-button">
+					{{#is_admin}}
+						<li>
+						  <a href="/admin" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Panel Administracyjny</a>
+						</li>
+					{{/is_admin}}
+                    <li>
+                      <a href="/shopping/user" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Moje Zakupy</a>
+                    </li>
+                    <li>
+                      <a href="/sales/user" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Sprzedaż</a>
+                    </li>
+                    <li>
+                        <a href="/products/user" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Moje Ogłoszenia</a>
+                    </li>
+                    <li>
+                      <a href="/product/add" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Wystaw</a>
+                    </li>
+                    <li>
+                      <a href="/profile/edit" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Edytuj Profil</a>
+                    </li>
+                    <li>
+                      <a href="/logout" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Wyloguj</a>
+                    </li>
+                  </ul>
+                  
+                </div>
+                {{/logged_in}}
+
+                <button data-collapse-toggle="navbar-user" type="button" class="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-500 rounded-lg md:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600" aria-controls="navbar-user" aria-expanded="false">
+                  <span class="sr-only">Menu</span>
+                  <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 17 14">
+                      <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 1h15M1 7h15M1 13h15"/>
+                  </svg>
+              </button>
+              
+            </div>
+            <div class="items-center justify-between hidden w-full md:flex md:w-auto md:order-1" id="navbar-user">
+              <ul class="flex flex-col font-medium p-4 md:p-0 mt-4 border border-gray-100 rounded-lg bg-gray-50 md:flex-row md:space-x-8 md:mt-0 md:border-0 md:bg-white dark:bg-gray-800 md:dark:bg-gray-900 dark:border-gray-700">
+                <li>
+                  <a href="/" class="block py-2 pl-3 pr-4 text-white bg-blue-700 rounded md:bg-transparent md:text-blue-700 md:p-0 md:dark:text-blue-500" aria-current="page">Strona Główna</a>
+                </li>
+                <li>
+                  <a href="/products" class="block py-2 pl-3 pr-4 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700">Produkty</a>
+                </li>               
+              </ul>
+            </div>
+            </div>
+        </nav>
+        
+        <section class="bg-center bg-no-repeat bg-cover bg-gray-700 bg-blend-multiply" style="background-image: url('static/assets/home/img/logo.jpg'); height: 612px;">
+            <div class="px-4 mx-auto max-w-screen-xl text-center py-24 lg:py-56">
+                <h1 class="mb-4 text-4xl font-extrabold tracking-tight leading-none text-white md:text-5xl lg:text-6xl">Sklep·Na·++</h1>
+                <p class="mb-8 text-lg font-normal text-gray-300 lg:text-xl sm:px-16 lg:px-48">Dla nas, w SklepNa++, zakupy to więcej niż transakcja. To połączenie tradycji z technologią, gdzie innowacje i jakość idą w parze, tworząc niepowtarzalne doświadczenie zakupowe.</p>
+            </div>
+        </section>
+        
+
+        <section class="bg-white dark:bg-gray-900 transition-all duration-900 ease-in-out py-12">
+            <div class="max-w-screen-xl mx-auto px-4 md:px-8">
+                <h2 class="text-3xl font-bold text-center mb-8 text-black dark:text-white">Aukcje</h2>
+        
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+
+                </div>
+
+
+            </div>
+        </section>
+
+        <footer class="bg-white rounded-lg shadow dark:bg-gray-900 m-4 transition-all duration-900 ease-in-out">
+            <div class="w-full max-w-screen-xl mx-auto p-4 md:py-8">
+                <div class="sm:flex sm:items-center sm:justify-between">
+                    <a href="/" class="flex items-center">
+                      <img src="static/assets/home/images/logo.png" class="h-8 mr-3" alt="SklepNa++" />
+                      <span class="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">Sklep·Na·++</span>
+                    </a>
+                    <ul class="flex flex-wrap items-center mb-6 text-sm font-medium text-gray-500 sm:mb-0 dark:text-gray-400">
+                        <li>
+                            <a href="#" class="mr-4 hover:underline md:mr-6 ">O Nas</a>
+                        </li>
+                        <li>
+                            <a href="#" class="mr-4 hover:underline md:mr-6">Polityka Prywatności</a>
+                        </li>
+                        <li>
+                            <a href="#" class="mr-4 hover:underline md:mr-6 ">Regulamin</a>
+                        </li>
+                    </ul>
+                </div>
+                <hr class="my-6 border-gray-200 sm:mx-auto dark:border-gray-700 lg:my-8" />
+                <span class="block text-sm text-gray-500 sm:text-center dark:text-gray-400">© 2023 <a href="/" class="hover:underline">Sklep·Na·++</a>. Wszelkie Prawa Zastrzeżone.</span>
+            </div>
+        </footer>
+
+
+
+        <!-- Logowanie -->
+        <div id="authentication-modal" tabindex="-1" aria-hidden="true" class="fixed top-0 left-0 right-0 z-50 hidden w-full p-4 overflow-x-hidden overflow-y-auto md:inset-0 h-[calc(100%-1rem)] max-h-full">
+            <div class="relative w-full max-w-md max-h-full">
+                <!-- Modal content -->
+                <div class="relative bg-white rounded-lg shadow dark:bg-gray-700">
+                    <button type="button" class="absolute top-3 right-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ml-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white" data-modal-hide="authentication-modal">
+                        <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                        </svg>
+                        <span class="sr-only">Zamknij</span>
+                    </button>
+                    <div class="px-6 py-6 lg:px-8">
+                        <h3 class="mb-4 text-xl font-medium text-gray-900 dark:text-white">Zaloguj się</h3>
+                        <form class="space-y-6" id="loginForm">
+                            <div>
+                                <label for="login" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Login: </label>
+                                <input type="login" name="login" id="login" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" placeholder="JanKowalski" required>
+                            </div>
+                            <div>
+                                <label for="password" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Hasło: </label>
+                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5 mt-8 mr-6">
+
+                                  <button type="button" class="button2  rounded-full" id="reveal" title="Reveal Password" aria-pressed="false">
+                                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                      <defs>
+                                        <mask id="eye-open">
+                                          <path d="M1 12C1 12 5 4 12 4C19 4 23 12 23 12V20H12H1V12Z" fill="#D9D9D9" stroke="black"
+                                            stroke-width="1.5" stroke-linejoin="round" />
+                                        </mask>
+                                        <mask id="eye-closed">
+                                          <path d="M1 12C1 12 5 20 12 20C19 20 23 12 23 12V20H12H1V12Z" fill="#D9D9D9" />
+                                        </mask>
+                                      </defs>
+                                      <path class="lid lid--upper" d="M1 12C1 12 5 4 12 4C19 4 23 12 23 12" stroke="currentColor" stroke-width="1.5"
+                                        stroke-linecap="round" stroke-linejoin="round" />
+                                      <path class="lid lid--lower" d="M1 12C1 12 5 20 12 20C19 20 23 12 23 12" stroke="currentColor"
+                                        stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                      <g mask="url(#eye-open)">
+                                        <g class="eye">
+                                          <circle cy="12" cx="12" r="4" fill="currentColor" />
+                                          <circle cy="11" cx="13" r="1" fill="black" />
+                                        </g>
+                                      </g>
+                                    </svg>
+                                    <span class="sr-only">Odkryj Hasło</span>
+                                  </button>
+              
+                                </div>
+                                <input type='password' name="password" id="password" placeholder="••••••••" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" required>
+                            </div>
+                            <button type="submit" onclick="submitLoginUser()" class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Zaloguj</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div> 
+        <script>
+           // Function to fetch product data from the server
+function fetchProducts() {
+    fetch('/products/data')
+        .then(response => response.json())
+        .then(data => {
+            // Filtrowanie produktów, aby pominąć te z flagą 'archived' ustawioną na 1
+            const filteredProducts = data.filter(product => product.archived !== 1);
+            // Sortowanie przefiltrowanych produktów według daty, malejąco, i wybranie pierwszych trzech
+            const sortedProducts = filteredProducts.sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 3);
+
+            // Now we populate the HTML with these products
+            const productContainer = document.querySelector('.grid.grid-cols-1.sm\\:grid-cols-3.gap-3');
+
+            // Clear existing products (if any)
+            productContainer.innerHTML = '';
+
+            // Append new products to the grid
+            sortedProducts.forEach(product => {
+                const productHtml = createProductHtml(product);
+                productContainer.innerHTML += productHtml;
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching products:', error);
+        });
+}
+
+// Function to create the HTML for a single product
+function createProductHtml(product) {
+    // Pick a random image from the product images
+    const randomImage = product.images[Math.floor(Math.random() * product.images.length)];
+    const decodedImagePath = decodeURIComponent(randomImage.path);
+
+
+    // Replace placeholders with actual product data
+    return `
+                <div class="w-full sm:w-1/3 px-4 mb-8">
+                    <div class="w-full max-w-xs bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 mx-auto">
+                        <a href="/products/${product.slug}">
+                            <img class="p-8 rounded-t-lg" src="/${decodedImagePath}" alt="${randomImage.name}" style ="border-radius: 8px; width: 320px; height: 210px; object-fit: cover;" />
+                        </a>
+                        <div class="px-5 pb-5">
+                            <a href="/products/${product.slug}">
+                                <h5 class="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">${product.name}</h5>
+                            </a>
+                            <p class="text-black dark:text-white">
+                            Opis:    ${product.descShort}
+                            </p>
+                            <div class="flex items-center justify-between">
+                                <span class="text-3xl font-bold text-gray-900 dark:text-white">${product.price} zł</span>
+                                <a href="/products/${product.slug}" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Szczegóły</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+    `;
+}
+
+// Call the function on page load
+document.addEventListener('DOMContentLoaded', fetchProducts);
+ 
+        </script>
+
+        <script>
+            document.getElementById('loginForm').addEventListener('submit', function(event) {
+                event.preventDefault(); // Zapobiega domyślnemu wysłaniu formularza
+                submitLoginUser();
+              });
+
+            function submitLoginUser() {
+              const formData = new FormData(document.getElementById('loginForm'));
+              fetch('/login', {
+                method: 'POST',
+                body: JSON.stringify(Object.fromEntries(formData)),
+                headers: {
+                  'Content-Type': 'application/json'
+                }
+              })
+              .then(response => response.json())
+              .then(data => {
+                Swal.fire({
+                  title: data.status === 'success' ? 'Zalogowano' : 'Błąd',
+                  text: data.message,
+                  icon: data.status === 'success' ? 'success' : 'error',
+                  confirmButtonText: 'OK',
+                  color: '#DEECF9',
+                }).then((result) => {
+                  if (data.status === "success") {
+                    location.href = "/";
+                  }
+                });
+              })
+              .catch(error => {
+                console.error('Błąd podczas logowania:', error);
+                Swal.fire({
+                  title: 'Błąd',
+                  text: 'Wystąpił problem z połączeniem.',
+                  icon: 'error',
+                  confirmButtonText: 'OK',
+                  color: '#DEECF9',
+                });
+              });
+            }
+          </script>
+
+        <script type="text/javascript" src="static/assets/home/js/darkmode.js"></script>
+        <script type="text/javascript" src="static/assets/home/js/main.js"></script>
+        <script src="https://assets.codepen.io/16327/MorphSVGPlugin3.min.js"></script>
+        <script src="https://assets.codepen.io/16327/ScrambleTextPlugin3.min.js"></script>
+        <script src="https://unpkg.com/gsap@3.11.0/dist/gsap.min.js"></script>
+        <script type="text/javascript" src="static/assets/home/js/password.js"></script>
+    </body>
+</html>

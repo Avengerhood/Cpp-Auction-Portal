@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<title>Dodaj produkt</title>
+<script>
+    // Funkcja do przesyłania obrazów na serwer i otrzymywania ich ID
+    function uploadImages(images) {
+        let imageUploadPromises = [];
+      
+        for (let i = 0; i < images.length; i++) {
+            let formData = new FormData();
+            formData.append('image', images[i]);
+      
+            let promise = fetch('/admin/addImage', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json());
+      
+            imageUploadPromises.push(promise);
+        }
+      
+        return Promise.all(imageUploadPromises); // Zwraca promise, który rozwiązuje się po wysłaniu wszystkich obrazów
+    }
+      
+    // Funkcja do wysyłania danych formularza produktu wraz z ID obrazów
+    function submitProductForm(imageIds) {
+        let formData = new FormData(document.getElementById('productForm'));
+        // Dodajemy ID obrazów do danych formularza jako pojedynczy ciąg rozdzielony przecinkami
+        formData.append('imageIds', imageIds.join(','));
+    
+        fetch('/admin/addProduct', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);
+            alert(data.message);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Wystąpił błąd podczas dodawania produktu.');
+        });
+    }
+      
+    // Funkcja do obsługi wysyłania formularza
+    function submitForm(event) {
+        event.preventDefault();
+        var images = document.getElementById('productImages').files;
+      
+        uploadImages(images)
+            .then(responses => {
+                // Zakładamy, że serwer zwraca obiekt z imageId dla każdego przesłanego obrazu
+                let imageIds = responses.map(response => response.imageId);
+                submitProductForm(imageIds);
+            })
+            .catch(error => {
+                console.error('Error during image upload:', error);
+                alert('Wystąpił błąd podczas przesyłania obrazów.');
+            });
+    }
+
+    // Dodatkowa funkcja do konwersji nazwy produktu na slug
+    function convertToSlug(text) {
+        return text
+            .normalize('NFD') // rozkład na znaki podstawowe i ich diakrytyki
+            .replace(/[\u0300-\u036f]/g, '') // usunięcie diakrytyków
+            .replace(/[^a-z0-9 -]/gi, '') // usunięcie nieprawidłowych znaków
+            .replace(/\s+/g, '-') // zamiana spacji na myślnik
+            .replace(/-+/g, '-') // zamiana wielokrotnych myślników na pojedyncze
+            .toLowerCase(); // konwersja na małe litery
+    }
+
+    // Funkcja do aktualizacji sluga w czasie rzeczywistym
+    function updateSlug() {
+        var productName = document.getElementById('product_name').value;
+        var slugField = document.getElementById('product_slug');
+        // Aktualizacja sluga tylko wtedy, gdy nie jest edytowany ręcznie
+        if (!slugField.getAttribute('data-user-edited')) {
+            slugField.value = convertToSlug(productName);
+        }
+    }
+
+    // Oznaczanie, że slug został edytowany ręcznie
+    function userEditedSlug() {
+        var slugField = document.getElementById('product_slug');
+        slugField.setAttribute('data-user-edited', 'true');
+    }
+
+    // Funkcja do pobierania kategorii i budowania menu rozwijanego
+    function loadCategories() {
+        fetch('/admin/category/data')
+        .then(response => response.json())
+        .then(data => {
+            var select = document.getElementById('product_category');
+            select.innerHTML = ''; // Czyści aktualne opcje
+            data.forEach(function(category, index) {
+                var option = document.createElement('option');
+                option.value = category.id;
+                option.text = category.name;
+                select.appendChild(option);
+            });
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Wystąpił błąd podczas ładowania kategorii.');
+        });
+    }
+
+    // Nasłuchiwanie na zmiany w polu nazwy produktu
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('product_name').addEventListener('input', updateSlug);
+        // Nasłuchiwanie na zmiany w slugu, aby wykryć ręczną edycję
+        document.getElementById('product_slug').addEventListener('input', function() {
+            this.value = convertToSlug(this.value);
+            userEditedSlug();
+        });
+        loadCategories();
+    });
+</script>
+</head>
+<body>
+
+<h2>Dodaj nowy produkt</h2>
+
+<form id="productForm" onsubmit="submitForm(event)">
+    <label for="product_name">Nazwa produktu:</label><br>
+    <input type="text" id="product_name" name="product_name" oninput="updateSlug()" required><br>
+
+    <label for="product_slug">Link do produktu:</label><br>
+    <input type="text" id="product_slug" name="product_slug" required><br>
+
+    <label for="product_desc_long">Długi opis produktu:</label><br>
+    <textarea id="product_desc_long" name="product_desc_long" required></textarea><br>
+
+    <label for="product_desc_short">Krótki opis produktu:</label><br>
+    <textarea id="product_desc_short" name="product_desc_short" required></textarea><br>
+
+    <label for="product_price">Cena:</label><br>
+    <input type="number" id="product_price" name="product_price" step="0.01" required><br>
+
+    <label for="product_date">Data rozpoczęcia:</label><br>
+    <input type="date" id="product_date" name="product_date" required><br>
+
+    <label for="product_enddate">Data zakończenia:</label><br>
+    <input type="date" id="product_enddate" name="product_enddate" required><br>
+
+    <label for="product_delivery">Dostawca:</label><br>
+    <input type="text" id="product_delivery" name="product_delivery" required><br>
+
+    <label for="product_delivery_cost">Koszt dostawy:</label><br>
+    <input type="number" id="product_delivery_cost" name="product_delivery_cost" step="0.01" required><br>
+
+    <label for="product_manager_display">Dodający użytkownik:</label><br>
+    <span id="product_manager_display">{{username}}</span><br>
+    <input type="hidden" id="product_manager" name="product_manager" value="{{user_id}}">
+
+    <label for="product_category">Kategoria:</label><br>
+    <select id="product_category" name="product_category" required></select><br>
+
+    <label for="buy_now">Kup teraz:</label><br>
+    <select id="buy_now" name="buy_now">
+        <option value="0">Nie</option>
+        <option value="1">Tak</option>
+    </select><br>
+
+    <label for="auction">Licytacja:</label><br>
+    <select id="auction" name="auction">
+        <option value="0">Nie</option>
+        <option value="1">Tak</option>
+    </select><br>
+
+    <label for="productImages">Zdjęcia produktu:</label><br>
+    <input type="file" id="productImages" name="productImages" multiple required><br><br>
+
+    <input type="submit" value="Dodaj produkt">
+</form>
+
+</body>
+</html>

@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="pl">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description" content="" />
+        <meta name="author" content="" />
+        <title>SklepNa++</title>
+        <!-- Favicon-->
+        <link rel="icon" type="image/x-icon" href="/static/assets/favicon.ico" />
+        <link href="/static/assets/home/css/main.css" rel="stylesheet" />
+        <script type="text/javascript" src="/static/assets/home/js/darkmode_head.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script> <!-- Include jQuery -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-dark@5/dark.css" />
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.js" defer></script>
+        <style>
+            .gallery-item {
+                position: relative;
+                display: inline-block; /* lub inny stosowny sposób wyświetlania */
+                margin: 5px;
+                cursor: pointer;
+                overflow: hidden; /* zapewnia, że nic nie wyjdzie poza kontener */
+            }
+
+            .gallery-item:hover .gallery-image {
+                opacity: 0.2;
+            }
+
+            .gallery-image {
+                width: 250px; /* Dostosuj szerokość */
+                height: 150px; /* Dostosuj wysokość */
+                object-fit: cover; /* Aby obraz wypełniał kontener */
+                transition: opacity 0.3s ease; /* płynne przejście dla efektu najechania */
+            }
+
+            .delete-button {
+                position: absolute;
+                top: 50%; /* Wyśrodkowanie w pionie */
+                left: 50%; /* Wyśrodkowanie w poziomie */
+                transform: translate(-50%, -50%); /* Precyzyjne wyśrodkowanie */
+                background-color: red;
+                color: white;
+                border: none;
+                cursor: pointer;
+                display: none;
+            }
+
+            .gallery-item:hover .delete-button {
+                display: block;
+            }
+            
+        </style>
+        <script>
+            
+          $(document).ready(function() {
+              var allProducts = [];
+              var currentPage = 1;
+              var itemsPerPage = 6;
+              var currentProductId = null;
+      
+              function renderTable(products) {
+                loadCategories();
+                var tableContent = '';
+                var startIndex = (currentPage - 1) * itemsPerPage;
+                var endIndex = startIndex + itemsPerPage;
+                
+
+                products.slice(startIndex, endIndex).forEach(function(product) {
+                    let statusText;
+                    let statusColor;
+                    if (product.archived === 0) {
+                        statusText = "Aktywne";
+                        statusColor = "bg-green-500";
+                    } else if (product.archived === 1) {
+                        statusText = "Zarchiwizowane";
+                        statusColor = "bg-red-500";
+                    } else {
+                        statusText = "Nieznana rola";
+                        statusColor = "bg-gray-500";
+                    }
+                    tableContent += '<tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">';
+                    tableContent += '<td class="px-6 py-4"> <div class="flex items-center"> <div class="h-2.5 w-2.5 rounded-full ' + statusColor + ' mr-2"></div>' + statusText + '</div></td>';
+                    tableContent += '<td class="px-6 py-4">' + product.name + '</td>';
+                    tableContent += '<td class="px-6 py-4"><a href="/products/' + product.slug + '" class="font-medium text-blue-600 dark:text-blue-500 hover:underline">' + product.slug + '</a></td>';
+                    tableContent += '<td class="px-6 py-4"><button onclick="openGalleryModal(\'' + product.id + '\')" class="text-blue-600 hover:text-blue-900"><a href="#" data-modal-target="gallery-modal" data-modal-toggle="gallery-modal" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">' + product.images.length +  '</a></button></td>';
+                    tableContent += '<td class="px-6 py-4">' + product.date + '</td>';
+                    tableContent += '<td class="px-6 py-4">' + product.endDate + '</td>';
+                    tableContent += '<td class="px-6 py-4">' + product.category + '</td>';
+                    tableContent += '<td class="px-6 py-4">' + product.price + '</td>';
+                    tableContent += '<td class="px-6 py-4">' + (product.buyNow ? 'Kup Teraz' : '') + (product.buyNow && product.auction ? ' & ' : '') + (product.auction ? 'Licytacja' : '') + '</td>';
+                    tableContent += '<td class="px-6 py-4">';
+                        if (product.auction === 1){
+                            tableContent += '<button onclick="endAuction(\'' + product.id + '\')" class="text-green-400 hover:text-blue-500">Zakończ Aukcje</button>';
+                        }
+                    tableContent += '<button onclick="editProduct(\'' + product.slug + '\')" class="text-blue-600 hover:text-blue-900"><a href="#" data-modal-target="add-modal" data-modal-toggle="add-modal" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Edytuj</a></button> ';
+                    tableContent += '<button onclick="deleteProduct(\'' + product.slug + '\')" class="text-red-600 hover:text-red-900">Usuń</button>';
+                    tableContent += '</td>';
+                    tableContent += '</tr>';
+                });
+
+                $('#userProductsTable').html(tableContent);   
+            }
+
+                window.endAuction = function(productId) {
+                    Swal.fire({
+                        title: 'Czy na pewno chcesz zakończyć licytację?',
+                        text: "Tej operacji nie można cofnąć!",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Tak, zakończ!',
+                        cancelButtonText: 'Nie, anuluj'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // Wysyłanie żądania do serwera
+                            $.ajax({
+                                url: '/bid/end',
+                                type: 'POST',
+                                data: JSON.stringify({ productId: productId }),
+                                contentType: 'application/json; charset=utf-8',
+                                success: function(response) {
+                                    Swal.fire(
+                                        'Zakończono!',
+                                        'Aukcja została zakończona.',
+                                        'success'
+                                    );
+                                    location.reload();
+                                },
+                                error: function() {
+                                    Swal.fire(
+                                        'Błąd',
+                                        'Nie udało się zakończyć aukcji.',
+                                        'error'
+                                    );
+                                }
+                            });
+                        }
+                    });
+                }
+
+
+            // Definiowanie openGalleryModal jako funkcji globalnej
+            window.openGalleryModal = function(productIdString) {
+                var productId = parseInt(productIdString); // Konwersja na liczbę całkowitą
+                console.log("Wywołano openGalleryModal dla produktu (ID jako string):", productIdString);
+                console.log("ID produktu po konwersji na liczbę:", productId);
+
+                currentProductId = productId; // Aktualizacja aktualnego ID produktu
+
+                var product = allProducts.find(p => p.id === productId); // Porównanie jako liczby
+                if (product) {
+                    console.log("Znaleziono produkt:", product);
+                    var galleryContent = '';
+                    var startIndex = (currentPage - 1) * itemsPerPage;
+                    var endIndex = startIndex + itemsPerPage;
+                    var imagesToShow = product.images.slice(startIndex, endIndex);
+
+                    imagesToShow.forEach(function(image) {
+                        galleryContent += `
+                            <div class="gallery-item">
+                                <img src="/${image.path}" alt="${image.name}" class="h-auto max-w-full rounded-lg gallery-image">
+                                <button class="delete-button text-white bg-purple-700 hover:bg-purple-800 focus:outline-none focus:ring-4 focus:ring-purple-300 font-medium rounded-full text-sm px-4 py-1 text-center mb-2 dark:bg-purple-600 dark:hover:bg-purple-700 dark:focus:ring-purple-900" onclick="deleteImage('${productId}', '${image.name}')">Usuń</button>
+                            </div>`;
+                
+                    });
+
+                    document.getElementById('gallery-content').innerHTML = galleryContent;
+                    $('#gallery-modal').show();
+                    updateGalleryPagination(product.images.length);
+                }
+                else {
+                    console.log("Nie znaleziono produktu o ID:", productId);
+                }
+            };
+
+            function updateGalleryPagination(totalItems) {
+                var totalPages = Math.ceil(totalItems / itemsPerPage);
+                $('#currentPage_gallery').text(currentPage);
+                $('#prevPage_gallery').prop('disabled', currentPage === 1);
+                $('#nextPage_gallery').prop('disabled', currentPage === totalPages);
+            }
+
+            $('#nextPage_gallery').click(function() {
+                currentPage++;
+                openGalleryModal(currentProductId); // Ustaw zmienną currentProductId gdziekolwiek w kodzie.
+            });
+
+            $('#prevPage_gallery').click(function() {
+                if (currentPage > 1) {
+                    currentPage--;
+                    openGalleryModal(currentProductId);
+                }
+            });
+
+            window.deleteImage = function(productId, imageName) {
+                // Wyświetlanie okna dialogowego z prośbą o potwierdzenie
+                Swal.fire({
+                    title: 'Czy na pewno chcesz usunąć to zdjęcie?',
+                    text: "Tej operacji nie można cofnąć!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Tak, usuń to!',
+                    cancelButtonText: 'Anuluj'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Użytkownik potwierdził, więc usuwamy zdjęcie
+                        console.log('Delete image:', productId, imageName);
+                        var dataToSend = JSON.stringify({ productId: productId, imageName: imageName });
+
+                        $.ajax({
+                            url: '/product/imgdelete',
+                            type: 'POST',
+                            contentType: 'application/json',
+                            data: dataToSend,
+                            success: function(response) {
+                                console.log("Odpowiedź serwera:", response);
+                                Swal.fire('Usunięto obraz!', '', 'success');
+                                location.href = "/products/user";
+                            },
+                            error: function(xhr, status, error) {
+                                console.error("Błąd odpowiedzi:", xhr.responseText);
+                                Swal.fire('Błąd', 'Nie udało się usunąć obrazu.', 'error');
+                            }
+                        });
+                    }
+                });
+            }
+
+            
+
+            window.deleteProduct = function(slug) {
+                Swal.fire({
+                    title: 'Czy na pewno chcesz usunąć ten produkt?',
+                    showCancelButton: true,
+                    confirmButtonText: 'Usuń',
+                    cancelButtonText: 'Anuluj',
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        var dataToSend = JSON.stringify({ slug: slug });
+                        console.log("Wysyłanie danych do serwera:", dataToSend); // Wypisanie danych wysyłanych do konsoli
+
+                        $.ajax({
+                            url: '/product/delete',
+                            type: 'POST',
+                            contentType: 'application/json',
+                            data: dataToSend,
+                            success: function(response) {
+                                console.log("Odpowiedź serwera:", response); // Wypisanie odpowiedzi serwera do konsoli
+                                Swal.fire('Usunięto!', '', 'success');
+                                location.href = "/products/user";
+                            },
+                            error: function(xhr, status, error) {
+                                console.error("Błąd odpowiedzi:", xhr.responseText); // Wypisanie błędu do konsoli
+                                Swal.fire('Błąd', 'Nie udało się usunąć produktu.', 'error');
+                            }
+                        });
+                    }
+                });
+            };
+
+        // Funkcja edytowania produktu (do implementacji)
+        window.editProduct = function(slug) {
+            var product = allProducts.find(p => p.slug === slug);
+            
+            if (product) {
+                $('#product_name').val(product.name);
+                $('#product_slug').val(product.slug).prop('disabled', true);
+                $('#product_desc_long').val(product.descLong);
+                $('#product_desc_short').val(product.descShort);
+                $('#product_price').val(product.price);
+                $('#product_delivery').val(product.delivery);
+                $('#product_delivery_cost').val(product.deliveryCost);
+                $('#product_category option').filter(function() {
+                    return $(this).text() == product.category;
+                }).prop('selected', true);
+                $('#buy_now').val(product.buyNow);
+                $('#auction').val(product.auction);
+                $('#product_date').val(formatDate(product.date)); // Formatuj datę na "YYYY-MM-DD"
+                $('#product_enddate').val(formatDate(product.endDate)); // Formatuj datę na "YYYY-MM-DD"
+                $('#add-modal').show(); // Otwórz okno modalne
+            }
+        };
+
+        function formatDate(dateString) {
+            var date = new Date(dateString);
+            var year = date.getFullYear();
+            var month = ('0' + (date.getMonth() + 1)).slice(-2);
+            var day = ('0' + date.getDate()).slice(-2);
+            return `${year}-${month}-${day}`;
+        }
+
+        // Funkcja do pobierania kategorii i budowania menu rozwijanego
+        function loadCategories() {
+            fetch('/admin/category/data')
+            .then(response => response.json())
+            .then(data => {
+                var select = document.getElementById('product_category');
+                select.innerHTML = ''; // Czyści aktualne opcje
+                data.forEach(function(category, index) {
+                    var option = document.createElement('option');
+                    option.value = category.id;
+                    option.text = category.name;
+                    select.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire({
+                    title: 'Błąd',
+                    text: 'Wystąpił błąd podczas ładowania kategorii.',
+                    icon: 'error',
+                    confirmButtonText: 'OK',
+                    color: '#DEECF9',
+                });
+            });
+          }
+
+          document.getElementById('productForm').addEventListener('submit', submitForm);
+
+          function submitForm(event) {
+            event.preventDefault();
+
+            let productData = {
+                product_name: document.getElementById('product_name').value,
+                product_slug: document.getElementById('product_slug').value,
+                product_desc_long: document.getElementById('product_desc_long').value,
+                product_desc_short: document.getElementById('product_desc_short').value,
+                product_price: parseFloat(document.getElementById('product_price').value),
+                product_date: document.getElementById('product_date').value,
+                product_enddate: document.getElementById('product_enddate').value,
+                product_delivery: document.getElementById('product_delivery').value,
+                product_delivery_cost: parseFloat(document.getElementById('product_delivery_cost').value),
+                product_manager: parseInt(document.getElementById('product_manager').value),
+                product_category: parseInt(document.getElementById('product_category').value),
+                buy_now: parseInt(document.getElementById('buy_now').value),
+                auction: parseInt(document.getElementById('auction').value)
+            };
+
+            fetch('/product/edit', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(productData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                Swal.fire({
+                    title: data.status === 'success' ? 'Sukces!' : 'Błąd!',
+                    text: data.message,
+                    icon: data.status === 'success' ? 'success' : 'error',
+                    confirmButtonText: 'OK',
+                }).then((result) => {
+                    if (data.status === "success") {
+                        location.href = "/products/user";
+                    }
+                });
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire({
+                    title: 'Błąd',
+                    text: 'Wystąpił błąd podczas dodawania produktu.',
+                    icon: 'error',
+                    confirmButtonText: 'OK',
+                });
+            });
+        }
+
+
+      
+        function loadUserProducts() {
+            $.ajax({
+                url: '/products/user/data',
+                type: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    allProducts = data.map(function(product) {
+                        return {
+                            id: product.id,
+                            name: product.name,
+                            slug: product.slug,
+                            price: product.price,
+                            descLong: product.descLong,
+                            descShort: product.descShort,
+                            date: product.date,
+                            endDate: product.endDate,
+                            delivery: product.delivery,
+                            deliveryCost: product.deliveryCost,
+                            manager: product.manager,
+                            category: product.category,
+                            buyNow: product.buyNow,
+                            auction: product.auction,
+                            archived: product.archived,
+                            images: product.images.map(function(image) {
+                                return {
+                                    name: image.name,
+                                    path: image.path
+                                };
+                            })
+                        };
+                    });
+                    renderTable(allProducts);
+                },
+                error: function() {
+                    console.error('Nie udało się załadować danych produktów');
+                }
+            });
+        }
+      
+              function updatePagination() {
+                  $('#currentPage').text(currentPage);
+              }
+      
+              $('#nextPage').click(function() {
+                  if (currentPage * itemsPerPage < allProducts.length) {
+                      currentPage++;
+                      renderTable(allProducts);
+                      updatePagination();
+                  }
+              });
+      
+              $('#prevPage').click(function() {
+                  if (currentPage > 1) {
+                      currentPage--;
+                      renderTable(allProducts);
+                      updatePagination();
+                  }
+              });
+      
+              $('#filterName').on('input', function() {
+                  var filteredProducts = allProducts.filter(function(product) {
+                      return product.name.toLowerCase().includes($('#filterName').val().toLowerCase());
+                  });
+      
+                  currentPage = 1; // Reset pagination
+                  renderTable(filteredProducts);
+                  updatePagination();
+              });
+      
+              loadUserProducts();
+          });
+      </script>
+      
+    </head>
+
+    <body class="bg-white dark:bg-gray-900 transition-all duration-900 ease-in-out">
+        
+        <nav class="bg-white border-gray-200 dark:bg-gray-900 sticky top-0 z-50">
+            <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
+            <a href="/" class="flex items-center">
+                <img src="/static/assets/home/images/logo.png" class="h-8 mr-3" alt="SklepNa++" />
+                <span class="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">Sklep·Na·++</span>
+            </a>
+            <div class="flex items-center md:order-2">
+                <button id="theme-toggle" type="button" class="text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 rounded-lg text-sm p-2.5 transition-all duration-900 ease-in-out mr-2">
+                    <svg id="theme-toggle-dark-icon" class="hidden w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+                    <svg id="theme-toggle-light-icon" class="hidden w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
+                    <span class="sr-only">Tryb Jasny/Ciemny</span>
+                </button>
+
+                {{^logged_in}}
+                <button data-modal-target="authentication-modal" data-modal-toggle="authentication-modal" class="block text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800" type="button">
+                    Zaloguj się
+                </button>
+
+                <a href="/register" target="_parent">
+                    <button type="submit" class="block text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800" type="button">
+                        Zarejestruj się
+                    </button>
+                </a>
+                {{/logged_in}}
+
+                {{#logged_in}}
+                <button type="button" class="flex mr-3 text-sm bg-gray-800 rounded-full md:mr-0 focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600" id="user-menu-button" aria-expanded="false" data-dropdown-toggle="user-dropdown" data-dropdown-placement="bottom">
+                  <span class="sr-only">Menu Użytkownika</span>
+                  <img class="w-8 h-8 rounded-full" src="/static/assets/home/img/avatar.png" alt="user photo">
+                </button>
+                
+                <!-- Dropdown menu -->
+                <div class="z-50 hidden my-4 text-base list-none bg-white divide-y divide-gray-100 rounded-lg shadow dark:bg-gray-700 dark:divide-gray-600" id="user-dropdown">
+                  <div class="px-4 py-3">
+                    <span class="block text-sm text-gray-900 dark:text-white">{{username}}</span>
+                    <span class="block text-sm  text-gray-500 truncate dark:text-gray-400">{{email}}</span>
+                  </div>
+                  <ul class="py-2" aria-labelledby="user-menu-button">
+					{{#is_admin}}
+						<li>
+						  <a href="/admin" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Panel Administracyjny</a>
+						</li>
+					{{/is_admin}}
+                    <li>
+                        <a href="/shopping/user" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Moje Zakupy</a>
+                    </li>
+                    <li>
+                    <a href="/sales/user" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Sprzedaż</a>
+                    </li>
+                    <li>
+                        <a href="/products/user" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Moje Ogłoszenia</a>
+                    </li>
+                    <li>
+                      <a href="/product/add" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Wystaw</a>
+                    </li>
+                    <li>
+                      <a href="/profile/edit" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Edytuj Profil</a>
+                    </li>
+                    <li>
+                      <a href="/logout" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Wyloguj</a>
+                    </li>
+                  </ul>
+                  
+                </div>
+                {{/logged_in}}
+
+                <button data-collapse-toggle="navbar-user" type="button" class="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-500 rounded-lg md:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600" aria-controls="navbar-user" aria-expanded="false">
+                  <span class="sr-only">Menu</span>
+                  <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 17 14">
+                      <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 1h15M1 7h15M1 13h15"/>
+                  </svg>
+              </button>
+              
+            </div>
+            <div class="items-center justify-between hidden w-full md:flex md:w-auto md:order-1" id="navbar-user">
+              <ul class="flex flex-col font-medium p-4 md:p-0 mt-4 border border-gray-100 rounded-lg bg-gray-50 md:flex-row md:space-x-8 md:mt-0 md:border-0 md:bg-white dark:bg-gray-800 md:dark:bg-gray-900 dark:border-gray-700">
+                <li>
+                    <a href="/" class="block py-2 pl-3 pr-4 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700" aria-current="page">Strona Główna</a>
+                </li>
+                <li>
+                    <a href="/products" class="block py-2 pl-3 pr-4 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700">Produkty</a>
+                </li>
+              </ul>
+            </div>
+            </div>
+        </nav>
+
+        <section class="bg-white dark:bg-gray-900 transition-all duration-900 min-h-screen flex items-center justify-center">
+          <div class="w-full mx-auto px-4 md:px-8 items-center justify-center">
+              <h2 class="text-3xl font-bold text-center mb-8 text-black dark:text-white">Twoje ogłoszenia:</h2>
+      
+              <!-- Filtry -->
+              <div class="mb-4">
+                  <input type="text" id="filterName" placeholder="Filtruj po nazwie..." class="border-2 border-gray-300 rounded-lg p-2">
+                  <!-- Można dodać więcej filtrów w zależności od potrzeb -->
+              </div>
+      
+              <!-- Tabela z stylami Flowbite -->
+              <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
+                  <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                      <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                          <tr>
+                              <th scope="col" class="px-6 py-3">Status</th>
+                              <th scope="col" class="px-6 py-3">Nazwa Produktu</th>
+                              <th scope="col" class="px-6 py-3">Link produktu</th>
+                              <th scope="col" class="px-6 py-3">Ilość Zdjęć</th>
+                              <th scope="col" class="px-6 py-3">Data Utworzenia</th>
+                              <th scope="col" class="px-6 py-3">Data Zakończenia</th>
+                              <th scope="col" class="px-6 py-3">Kategoria</th>
+                              <th scope="col" class="px-6 py-3">Cena</th>
+                              <th scope="col" class="px-6 py-3">Typ Aukcji</th>
+                              <th scope="col" class="px-6 py-3">Akcje</th>
+                          </tr>
+                      </thead>
+                      <tbody id="userProductsTable">
+                          <!-- Dane produktów zostaną załadowane tutaj -->
+                      </tbody>
+                  </table>
+              </div>
+      
+              <!-- Paginacja -->
+              <div id="pagination" class="flex justify-center items-center mt-4">
+                  <button id="prevPage" class="text-white bg-purple-700 hover:bg-purple-800 focus:outline-none focus:ring-4 focus:ring-purple-300 font-medium rounded-full text-sm px-4 py-1 text-center mb-2 dark:bg-purple-600 dark:hover:bg-purple-700 dark:focus:ring-purple-900">Poprzednia</button>
+                  <span id="currentPage" class="ml-2 mr-2 mb-2 text-black dark:text-white rounded-full">1</span>
+                  <button id="nextPage" class="text-white bg-purple-700 hover:bg-purple-800 focus:outline-none focus:ring-4 focus:ring-purple-300 font-medium rounded-full text-sm px-4 py-1 text-center mb-2 dark:bg-purple-600 dark:hover:bg-purple-700 dark:focus:ring-purple-900">Następna</button>
+              </div>
+          </div>
+      </section>
+      
+      
+
+        <footer class="bg-white rounded-lg shadow dark:bg-gray-900 m-4 transition-all duration-900 ease-in-out">
+            <div class="w-full max-w-screen-xl mx-auto p-4 md:py-8">
+                <div class="sm:flex sm:items-center sm:justify-between">
+                    <a href="/" class="flex items-center mb-4 sm:mb-0">
+                        <img src="https://flowbite.com/docs/images/logo.svg" class="h-8 mr-3 hidden" alt="Flowbite Logo" />
+                        <img src="/static/assets/home/images/logo.png" class="h-8 mr-3" alt="SklepNa++" />
+                        <span class="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">Sklep·Na·++</span>
+                    </a>
+                    <ul class="flex flex-wrap items-center mb-6 text-sm font-medium text-gray-500 sm:mb-0 dark:text-gray-400">
+                        <li>
+                            <a href="#" class="mr-4 hover:underline md:mr-6 ">O Nas</a>
+                        </li>
+                        <li>
+                            <a href="#" class="mr-4 hover:underline md:mr-6">Polityka Prywatności</a>
+                        </li>
+                        <li>
+                            <a href="#" class="mr-4 hover:underline md:mr-6 ">Regulamin</a>
+                        </li>
+                    </ul>
+                </div>
+                <hr class="my-6 border-gray-200 sm:mx-auto dark:border-gray-700 lg:my-8" />
+                <span class="block text-sm text-gray-500 sm:text-center dark:text-gray-400">© 2023 <a href="/" class="hover:underline">Sklep·Na·++</a>. Wszelkie Prawa Zastrzeżone.</span>
+            </div>
+        </footer>
+
+
+        <!-- Main modal -->
+        <div id="add-modal" data-modal-backdrop="addm" tabindex="-1" aria-hidden="true" class="fixed top-0 left-0 right-0 z-50 hidden w-full p-4 overflow-x-hidden overflow-y-auto md:inset-0 h-[calc(100%-1rem)] max-h-full">
+            <div class="relative w-full max-w-2xl max-h-full">
+               <!-- Modal content -->
+               <div class="relative bg-white rounded-lg shadow dark:bg-gray-700">
+                  <!-- Modal header -->
+                  <div class="flex items-start justify-between p-4 border-b rounded-t dark:border-gray-600">
+                        <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
+                           Edycja Produktu
+                        </h3>
+                        <button type="button" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ml-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white" data-modal-hide="add-modal">
+                           <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                           </svg>
+                           <span class="sr-only">Zamknij</span>
+                        </button>
+                  </div>
+                  <!-- Modal body -->
+                  <div class="p-6 space-y-6">
+                    <form id="productForm" onsubmit="submitForm(event)">
+                        <div class="relative z-0 w-full mb-6 group">
+                          <label for="product_name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Nazwa Produktu :</label>
+                          <input type="text" id="product_name" name="product_name" aria-describedby="helper-text" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="GeForce RTX 3060" required>
+                          <p id="helper-text" class="mt-2 text-sm text-gray-500 dark:text-gray-400">Pamiętaj aby dostosować się do naszego <a href="#" class="font-medium text-blue-600 hover:underline dark:text-blue-500">Regulaminu</a>.</p>
+                        </div>
+                        <div class="relative z-0 w-full mb-6 group">
+                          <label for="product_slug" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Link Produktu :</label>
+                          <input type="text" id="product_slug" name="product_slug" aria-describedby="helper-text-slug" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="geforce-rtx-3060" required>
+                          <p id="helper-text-slug" class="mt-2 text-sm text-gray-500 dark:text-gray-400">Link nie może zawierać polskich słów, znaków specjalnych oraz spacji.</p>
+                        </div>
+                        <div class="relative z-0 w-full mb-6 group">
+                          <label for="product_desc_long" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Długi Opis Produktu:</label>
+                          <textarea id="product_desc_long" name="product_desc_long" rows="4" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Aby cieszyć się grą na najwyższych ustawieniach graficznych, niezbędny jest solidny sprzęt. Na szczęście w ostatnim czasie gracze nie mogą narzekać. Karta graficzna Gigabyte RTX 3060 GAMING OC 12G oferuje wszystko, czego trzeba, aby cieszyć się rozgrywką na naprawdę wysokim poziomie. Jest to propozycja przygotowana dla wymagających graczy, którzy cenią sobie przede wszystkim komfort oraz osiągi, które oferuje sprzęt o takich parametrach. Mamy do czynienia z niebanalną konstrukcją, w środku której drzemie prawdziwy potwór." required></textarea>
+                        </div>
+                        <div class="relative z-0 w-full mb-6 group">
+                          <label for="product_desc_short" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Krótki Opis Produktu:</label>
+                          <textarea id="product_desc_short" name="product_desc_short" rows="4" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Aby cieszyć się grą na najwyższych ustawieniach graficznych, niezbędny jest solidny sprzęt. Na szczęście w ostatnim czasie gracze nie mogą narzekać. Karta graficzna Gigabyte..." required></textarea>
+                        </div>
+                        <div class="relative z-0 w-full mb-6 group">
+                          <label for="product_price" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Cena Produktu :</label>
+                          <input type="number" id="product_price" name="product_price" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="1499" step="0.01" required>
+                        </div>
+
+                        <div class="grid md:grid-cols-2 md:gap-6">
+                          <div class="relative z-0 w-full mb-6 group">
+                            <label for="product_delivery" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Dostawca :</label>
+                            <input type="text" id="product_delivery" name="product_delivery" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Inpost Paczkomaty 24/7" required>
+                          </div>
+                          <div class="relative z-0 w-full mb-6 group">
+                            <label for="product_delivery_cost" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Cena Dostawy :</label>
+                            <input type="number" id="product_delivery_cost" name="product_delivery_cost" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="14.99" step="0.01" required>
+                          </div>
+                        </div>
+
+                        <div class="relative z-0 w-full mb-6 group">
+                          <label for="product_category" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Kategoria Produktu :</label>
+                          <select id="product_category" name="product_category" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" required>
+                          </select>
+                        </div>
+
+                        <div class="grid md:grid-cols-2 md:gap-6">
+                          <div class="relative z-0 w-full mb-6 group">
+                            <label for="buy_now" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Kup Teraz :</label>
+                            <select id="buy_now" name="buy_now" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" required>
+                              <option value="0">Nie</option>
+                              <option value="1">Tak</option>
+                            </select>
+                          </div>
+                          <div class="relative z-0 w-full mb-6 group">
+                            <label for="auction" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Licytacja :</label>
+                            <select id="auction" name="auction" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" required>
+                              <option value="0">Nie</option>
+                              <option value="1">Tak</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div class="grid md:grid-cols-2 md:gap-6">
+                          <div class="relative z-0 w-full mb-6 group">
+                            <label for="product_date" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Data Utworzenia :</label>
+                            <input type="date" id="product_date" name="product_date" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" required>
+                          </div>
+                          <div class="relative z-0 w-full mb-6 group">
+                            <label for="product_enddate" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Data Zakończenia :</label>
+                            <input type="date" id="product_enddate" name="product_enddate" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" required>
+                          </div>
+                        </div>
+
+                        <div class="relative z-0 w-full mb-6 group">
+                          <label for="product_manager_display" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Sprzedawca :</label>
+                          <span id="product_manager_display" class="text-black dark:text-white">{{username}}</span><br>
+                          <input type="hidden" id="product_manager" name="product_manager" value="{{user_id}}">
+                        </div>
+
+                        <button type="submit" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Zaktualizuj</button>
+                      </form>
+                  </div>
+                  <!-- Modal footer -->
+                  <div class="flex items-center p-6 space-x-2 border-t border-gray-200 rounded-b dark:border-gray-600">
+                     <button data-modal-hide="add-modal" type="button" class="text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-800">Anuluj</button>
+                  </div>
+               </div>
+            </div>
+         </div>
+
+
+         <!-- Gallery modal -->
+        <div id="gallery-modal" data-modal-backdrop="galm" tabindex="-1" aria-hidden="true" class="fixed top-0 left-0 right-0 z-50 hidden w-full p-4 overflow-x-hidden overflow-y-auto md:inset-0 h-[calc(100%-1rem)] max-h-full">
+            <div class="relative w-full max-w-2xl max-h-full">
+               <!-- Modal content -->
+               <div class="relative bg-white rounded-lg shadow dark:bg-gray-700">
+                  <!-- Modal header -->
+                  <div class="flex items-start justify-between p-4 border-b rounded-t dark:border-gray-600">
+                        <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
+                           Zdjęcia Produktu
+                        </h3>
+                        <button type="button" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ml-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white" data-modal-hide="gallery-modal">
+                           <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                           </svg>
+                           <span class="sr-only">Zamknij</span>
+                        </button>
+                  </div>
+                  <!-- Modal body -->
+                  <div class="p-6 space-y-6">
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4" id="gallery-content">
+                        
+                    </div>
+                    <!-- Paginacja -->
+                    <div id="pagination_gallery" class="flex justify-center items-center mt-4">
+                        <button id="prevPage_gallery" class="text-white bg-purple-700 hover:bg-purple-800 focus:outline-none focus:ring-4 focus:ring-purple-300 font-medium rounded-full text-sm px-4 py-1 text-center mb-2 dark:bg-purple-600 dark:hover:bg-purple-700 dark:focus:ring-purple-900">Poprzednia</button>
+                        <span id="currentPage_gallery" class="ml-2 mr-2 mb-2 text-black dark:text-white rounded-full">1</span>
+                        <button id="nextPage_gallery" class="text-white bg-purple-700 hover:bg-purple-800 focus:outline-none focus:ring-4 focus:ring-purple-300 font-medium rounded-full text-sm px-4 py-1 text-center mb-2 dark:bg-purple-600 dark:hover:bg-purple-700 dark:focus:ring-purple-900">Następna</button>
+                    </div>
+
+                  </div>
+                  <!-- Modal footer -->
+                  <div class="flex items-center p-6 space-x-2 border-t border-gray-200 rounded-b dark:border-gray-600">
+                     <button data-modal-hide="gallery-modal" type="button" class="text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-800">Anuluj</button>
+                  </div>
+               </div>
+            </div>
+         </div>
+
+
+
+        <!-- Logowanie -->
+        <div id="authentication-modal" tabindex="-1" aria-hidden="true" class="fixed top-0 left-0 right-0 z-50 hidden w-full p-4 overflow-x-hidden overflow-y-auto md:inset-0 h-[calc(100%-1rem)] max-h-full">
+            <div class="relative w-full max-w-md max-h-full">
+                <!-- Modal content -->
+                <div class="relative bg-white rounded-lg shadow dark:bg-gray-700">
+                    <button type="button" class="absolute top-3 right-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ml-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white" data-modal-hide="authentication-modal">
+                        <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                        </svg>
+                        <span class="sr-only">Zamknij</span>
+                    </button>
+                    <div class="px-6 py-6 lg:px-8">
+                        <h3 class="mb-4 text-xl font-medium text-gray-900 dark:text-white">Zaloguj się</h3>
+                        <form class="space-y-6" id="loginForm">
+                            <div>
+                                <label for="login" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Login: </label>
+                                <input type="login" name="login" id="login" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" placeholder="name@company.com" required>
+                            </div>
+                            <div>
+                                <label for="password" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Hasło: </label>
+                                <input type="password" name="password" id="password" placeholder="••••••••" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" required>
+                            </div>
+                            <button type="submit" onclick="submitLoginUser()" class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Zaloguj</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div> 
+
+        <script type="text/javascript" src="/static/assets/home/js/darkmode.js"></script>
+        <script type="text/javascript" src="/static/assets/home/js/main.js"></script>
+    </body>
+</html>

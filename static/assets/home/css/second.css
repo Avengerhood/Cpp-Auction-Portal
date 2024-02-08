@@ -1,0 +1,59 @@
+p:empty {
+  height: 1em;
+}
+
+
+/* Przycisk do góry */
+#to-top-button {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 50;
+}
+
+/* Ekranny większe niż 1024px */
+@media (min-width: 1024px) {
+  #to-top-button {
+      display: none;
+  }
+  
+  #to-top-button.show {
+      display: block;
+  }
+}
+
+/* Styl Scrollbara */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: #374151;
+  -webkit-border-radius: 10px;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  -webkit-border-radius: 10px;
+  border-radius: 10px;
+  background: #1A56DB; 
+}
+
+/* Nawigacja na PC i wyżej */
+@media (max-width: 1024px) {
+  header nav {
+      display: none;
+  }
+}
+
+/* Domyślny styl dla nawigacji mobilnej */
+#mobile-navigation {
+display: none; /* Hide by default */
+}
+
+@media (max-width: 1024px) {
+#mobile-navigation {
+  display: block; 
+}
+}
+

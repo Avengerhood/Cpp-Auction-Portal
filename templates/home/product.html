@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="pl">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description" content="" />
+        <meta name="author" content="" />
+        <title>SklepNa++</title>
+        <!-- Favicon-->
+        <link rel="icon" type="image/x-icon" href="/static/assets/favicon.ico" />
+        <link href="/static/assets/home/css/main.css" rel="stylesheet" />
+        <script type="text/javascript" src="/static/assets/home/js/darkmode_head.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script> <!-- Include jQuery -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-dark@5/dark.css" />
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.js" defer></script>
+        <link rel="stylesheet" type="text/css" href="/static/assets/home/css/tw-elements.min.css" />
+        <link rel="stylesheet" type="text/css" href="/static/assets/home/css/fenix.css">
+        <link rel="stylesheet" type="text/css" href="/static/assets/home/css/second.css">
+        <link rel="stylesheet" type="text/css" href="/static/assets/home/css/blog.css">
+        
+
+        
+        
+        
+    </head>
+
+    <body class="bg-white dark:bg-gray-900 transition-all duration-900 ease-in-out">
+        
+        <nav class="bg-white border-gray-200 dark:bg-gray-900 sticky top-0 z-50">
+            <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
+                <a href="/" class="flex items-center">
+                    <img src="/static/assets/home/images/logo.png" class="h-8 mr-3" alt="SklepNa++" />
+                    <span class="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">Sklep·Na·++</span>
+                </a>
+            <div class="flex items-center md:order-2">
+                <button id="theme-toggle" type="button" class="text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 rounded-lg text-sm p-2.5 transition-all duration-900 ease-in-out mr-2">
+                    <svg id="theme-toggle-dark-icon" class="hidden w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+                    <svg id="theme-toggle-light-icon" class="hidden w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
+                    <span class="sr-only">Tryb Jasny/Ciemny</span>
+                </button>
+
+                {{^logged_in}}
+                <button data-modal-target="authentication-modal" data-modal-toggle="authentication-modal" class="block text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800" type="button">
+                    Zaloguj się
+                </button>
+
+                <a href="/register" target="_parent">
+                    <button type="submit" class="block text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800" type="button">
+                        Zarejestruj się
+                    </button>
+                </a>
+                {{/logged_in}}
+
+                {{#logged_in}}
+                <button type="button" class="flex mr-3 text-sm bg-gray-800 rounded-full md:mr-0 focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600" id="user-menu-button" aria-expanded="false" data-dropdown-toggle="user-dropdown" data-dropdown-placement="bottom">
+                  <span class="sr-only">Menu Użytkownika</span>
+                  <img class="w-8 h-8 rounded-full" src="/static/assets/home/img/avatar.png" alt="user photo">
+                </button>
+                
+                <!-- Dropdown menu -->
+                <div class="z-50 hidden my-4 text-base list-none bg-white divide-y divide-gray-100 rounded-lg shadow dark:bg-gray-700 dark:divide-gray-600" id="user-dropdown">
+                  <div class="px-4 py-3">
+                    <span class="block text-sm text-gray-900 dark:text-white">{{username}}</span>
+                    <span class="block text-sm  text-gray-500 truncate dark:text-gray-400">{{email}}</span>
+                  </div>
+                  <ul class="py-2" aria-labelledby="user-menu-button">
+					{{#is_admin}}
+						<li>
+						  <a href="/admin" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Panel Administracyjny</a>
+						</li>
+					{{/is_admin}}
+                    <li>
+                        <a href="/shopping/user" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Moje Zakupy</a>
+                    </li>
+                    <li>
+                    <a href="/sales/user" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Sprzedaż</a>
+                    </li>
+                    <li>
+                        <a href="/products/user" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Moje Ogłoszenia</a>
+                    </li>
+                    <li>
+                        <a href="/product/add" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Wystaw</a>
+                      </li>
+                    <li>
+                      <a href="/profile/edit" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Edytuj Profil</a>
+                    </li>
+                    <li>
+                      <a href="/logout" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Wyloguj</a>
+                    </li>
+                  </ul>
+                  
+                </div>
+                {{/logged_in}}
+
+                <button data-collapse-toggle="navbar-user" type="button" class="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-500 rounded-lg md:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600" aria-controls="navbar-user" aria-expanded="false">
+                  <span class="sr-only">Menu</span>
+                  <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 17 14">
+                      <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 1h15M1 7h15M1 13h15"/>
+                  </svg>
+              </button>
+              
+            </div>
+            <div class="items-center justify-between hidden w-full md:flex md:w-auto md:order-1" id="navbar-user">
+                <ul class="flex flex-col font-medium p-4 md:p-0 mt-4 border border-gray-100 rounded-lg bg-gray-50 md:flex-row md:space-x-8 md:mt-0 md:border-0 md:bg-white dark:bg-gray-800 md:dark:bg-gray-900 dark:border-gray-700">
+                    <li>
+                      <a href="/" class="block py-2 pl-3 pr-4 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700">Strona Główna</a>
+                    </li>
+                    <li>
+                      <a href="/products" class="block py-2 pl-3 pr-4 text-white bg-blue-700 rounded md:bg-transparent md:text-blue-700 md:p-0 md:dark:text-blue-500" aria-current="page">Produkty</a>
+                    </li>
+                  </ul>
+            </div>
+            </div>
+        </nav>
+
+        <section class="relative space-y-5 transition-all duration-900 ease-in-out" >
+
+          <div class="banner transition-all duration-900 ease-in-out">
+              <img src="/static/assets/home/img/logo.png" alt="Zdjęcie Nagłówka" class="rounded-lg transition-all duration-900 ease-in-out">
+          </div>
+  
+          <div class="relative items-center text-center bg-opacity-40 bg-gray-900/50  p-4 rounded-lg shadow-lg max-w-screen-xl mx-auto px-8">
+              <!-- Publikacja -->
+              <p class="text-base font-bold text-gray-200 transition-all duration-900 ease-in-out">
+                Opublikowano: <time pubdate datetime="2023" title="Data Publikacji" id="product-date"></time>
+                  | Data Zakończenia: <time pubdate datetime="enddate" title="Data Zakończenia" id="product-enddate"></time>
+              </p></br>
+              <h1 class="mb-4 text-3xl font-extrabold leading-tight lg:mb-6 lg:text-4xl text-white transition-all duration-900 ease-in-out" id="product-name"></h1>
+          </div>
+          
+          
+          
+          
+  
+          <div  class="relative max-w-screen-xl mx-auto px-8 py-14 lg:py-24 space-x-5 flex bg-white dark:bg-gray-900 rounded-lg transition-all duration-900 ease-in-out">
+              <main class="pt-8 pb-16 lg:pt-16 lg:pb-24 bg-white dark:bg-gray-900 flex-1 transition-all duration-900 ease-in-out">
+                  <div class="flex justify-between px-4 mx-auto max-w-screen-xl transition-all duration-900 ease-in-out">
+                      <article class="mx-auto w-full max-w-2xl text-gray-900 dark:text-white transition-all duration-900 ease-in-out">
+                          <header class="mb-4 lg:mb-6 not-format transition-all duration-900 ease-in-out">
+                              <p class="text-base font-light text-gray-500 dark:text-gray-400 transition-all duration-900 ease-in-out">
+                              Kategoria: 
+                              <button type="button" onclick="redirectToCategory()" class="text-white bg-purple-700 hover:bg-purple-800 focus:outline-none focus:ring-4 focus:ring-purple-300 font-medium rounded-full text-sm px-4 py-1 text-center mb-2 dark:bg-purple-600 dark:hover:bg-purple-700 dark:focus:ring-purple-900"><p id="product-category"></p></button>
+                              </p>            
+                          </header>
+                          
+                              <div class="relative w-full">
+
+                                <div id="carouselExampleCrossfade" class="relative" data-te-carousel-init data-te-lightbox-init data-te-ride="carousel">
+
+
+                                        <!--Carousel items-->
+                                        <div class="relative h-56 rounded-xl md:h-auto overflow-hidden after:clear-both after:block after:content-['']" id="product-images">
+
+                                        </div>
+                                      
+                                        <!--Carousel controls - prev item-->
+                                        <button
+                                          class="absolute bottom-0 left-0 top-0 z-[1] flex w-[15%] items-center justify-center border-0 bg-none p-0 text-center text-white opacity-50 transition-opacity duration-150 ease-[cubic-bezier(0.25,0.1,0.25,1.0)] hover:text-white hover:no-underline hover:opacity-90 hover:outline-none focus:text-white focus:no-underline focus:opacity-90 focus:outline-none motion-reduce:transition-none"
+                                          type="button"
+                                          data-te-target="#carouselExampleCrossfade"
+                                          data-te-slide="prev">
+                                          <span class="inline-block h-8 w-8">
+                                            <svg
+                                              xmlns="http://www.w3.org/2000/svg"
+                                              fill="none"
+                                              viewBox="0 0 24 24"
+                                              stroke-width="1.5"
+                                              stroke="currentColor"
+                                              class="h-6 w-6">
+                                              <path
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                d="M15.75 19.5L8.25 12l7.5-7.5" />
+                                            </svg>
+                                          </span>
+                                          <span
+                                            class="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]"
+                                            >Previous</span
+                                          >
+                                        </button>
+                                        <!--Carousel controls - next item-->
+                                        <button
+                                          class="absolute bottom-0 right-0 top-0 z-[1] flex w-[15%] items-center justify-center border-0 bg-none p-0 text-center text-white opacity-50 transition-opacity duration-150 ease-[cubic-bezier(0.25,0.1,0.25,1.0)] hover:text-white hover:no-underline hover:opacity-90 hover:outline-none focus:text-white focus:no-underline focus:opacity-90 focus:outline-none motion-reduce:transition-none"
+                                          type="button"
+                                          data-te-target="#carouselExampleCrossfade"
+                                          data-te-slide="next">
+                                          <span class="inline-block h-8 w-8">
+                                            <svg
+                                              xmlns="http://www.w3.org/2000/svg"
+                                              fill="none"
+                                              viewBox="0 0 24 24"
+                                              stroke-width="1.5"
+                                              stroke="currentColor"
+                                              class="h-6 w-6">
+                                              <path
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                                            </svg>
+                                          </span>
+                                          <span
+                                            class="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]"
+                                            >Next</span
+                                          >
+                                        </button>
+                                      </div>
+                              </div>
+                          </br>
+                          <p id="product-desc-long"></p>
+                          </br><p>
+                                  <hr class="my-12 h-0.5 border-t-0 bg-gray-900 dark:bg-gray-400 opacity-100 dark:opacity-50" />
+                                  <div class="grid place-items-center">
+                                      <button onclick="window.history.go(-1); return false;" type="button" class="text-white bg-gradient-to-r from-purple-500 via-purple-600 to-purple-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-purple-300 dark:focus:ring-purple-800 shadow-lg shadow-purple-500/50 dark:shadow-lg dark:shadow-purple-800/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center mr-2 mb-2">Wróć</button>
+                                  </div>
+                              </p>
+                          </br>
+                      </article>
+                      
+                      
+                  </div>
+              
+              </main>
+
+              <aside class="w-1/3 ml-8 bg-gray-100 dark:bg-gray-800 rounded-lg p-5 mt-5 transition-all duration-900 ease-in-out">
+                  <div class="custom-sticky transition-all duration-900 ease-in-out">
+
+  
+                      <!-- Widżet Kup Teraz lub Licytuj -->
+                      <div class="mb-6 transition-all duration-900 ease-in-out">
+                          <h2 class="text-xl font-semibold mb-3 text-gray-900 dark:text-white transition-all duration-900 ease-in-out">Akcje</h2>
+                          <div class="p-3 py-2 rounded-lg shadow-md flex flex-col gap-4 bg-gray-200 dark:bg-gray-700 transition-all duration-900 ease-in-out actions-container">
+                              
+
+                          </div>
+                      </div>
+
+                      <!-- Widżet Kup Teraz lub Licytuj -->
+                      <div class="mb-6 transition-all duration-900 ease-in-out">
+                          <h2 class="text-xl font-semibold mb-3 text-gray-900 dark:text-white transition-all duration-900 ease-in-out">Cena: </h2>
+                          <div class="p-3 py-2 rounded-lg shadow-md flex flex-col gap-4 bg-gray-200 dark:bg-gray-700 transition-all duration-900 ease-in-out">
+                              <div class="text-lg font-semibold transition-all duration-900 ease-in-out"><p id="product-price"></p></div>
+                          </div>
+                          <h2 class="text-xl font-semibold mb-3 text-gray-900 dark:text-white transition-all duration-900 ease-in-out">Dostawca: </h2>
+                          <div class="p-3 py-2 rounded-lg shadow-md flex flex-col gap-4 bg-gray-200 dark:bg-gray-700 transition-all duration-900 ease-in-out">
+                              <div class="text-lg font-semibold transition-all duration-900 ease-in-out"><p id="product-delivery"></p></div>
+                              <div class="text-lg font-semibold transition-all duration-900 ease-in-out"><p id="product-delivery-cost"></p></div>
+                          </div>
+                          <h2 class="text-xl font-semibold mb-3 text-gray-900 dark:text-white transition-all duration-900 ease-in-out">Informacje o sprzedawcy: </h2>
+                          <div class="p-3 py-2 rounded-lg shadow-md flex flex-col gap-4 bg-gray-200 dark:bg-gray-700 transition-all duration-900 ease-in-out">
+                              <div class="text-lg font-semibold transition-all duration-900 ease-in-out"><p id="product-manager"></p></div>
+                              <div class="text-lg font-semibold transition-all duration-900 ease-in-out"><p id="product-manager-phone"></p></div>
+                          </div>
+                      </div>
+
+
+                  </div>
+              </aside>
+          </div>
+      </section>
+
+        <footer class="bg-white rounded-lg shadow dark:bg-gray-900 m-4 transition-all duration-900 ease-in-out">
+            <div class="w-full max-w-screen-xl mx-auto p-4 md:py-8">
+                <div class="sm:flex sm:items-center sm:justify-between">
+                    <a href="/" class="flex items-center">
+                        <img src="/static/assets/home/images/logo.png" class="h-8 mr-3" alt="SklepNa++" />
+                        <span class="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">Sklep·Na·++</span>
+                    </a>
+                    <ul class="flex flex-wrap items-center mb-6 text-sm font-medium text-gray-500 sm:mb-0 dark:text-gray-400">
+                        <li>
+                            <a href="#" class="mr-4 hover:underline md:mr-6 ">O Nas</a>
+                        </li>
+                        <li>
+                            <a href="#" class="mr-4 hover:underline md:mr-6">Polityka Prywatności</a>
+                        </li>
+                        <li>
+                            <a href="#" class="mr-4 hover:underline md:mr-6 ">Regulamin</a>
+                        </li>
+                    </ul>
+                </div>
+                <hr class="my-6 border-gray-200 sm:mx-auto dark:border-gray-700 lg:my-8" />
+                <span class="block text-sm text-gray-500 sm:text-center dark:text-gray-400">© 2023 <a href="/" class="hover:underline">Sklep·Na·++</a>. Wszelkie Prawa Zastrzeżone.</span>
+            </div>
+        </footer>
+
+
+
+        <!-- Logowanie -->
+        <div id="authentication-modal" tabindex="-1" aria-hidden="true" class="fixed top-0 left-0 right-0 z-50 hidden w-full p-4 overflow-x-hidden overflow-y-auto md:inset-0 h-[calc(100%-1rem)] max-h-full">
+            <div class="relative w-full max-w-md max-h-full">
+                <!-- Modal content -->
+                <div class="relative bg-white rounded-lg shadow dark:bg-gray-700">
+                    <button type="button" class="absolute top-3 right-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ml-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white" data-modal-hide="authentication-modal">
+                        <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                        </svg>
+                        <span class="sr-only">Zamknij</span>
+                    </button>
+                    <div class="px-6 py-6 lg:px-8">
+                        <h3 class="mb-4 text-xl font-medium text-gray-900 dark:text-white">Zaloguj się</h3>
+                        <form class="space-y-6" id="loginForm">
+                            <div>
+                                <label for="login" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Login: </label>
+                                <input type="login" name="login" id="login" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" placeholder="name@company.com" required>
+                            </div>
+                            <div>
+                                <label for="password" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Hasło: </label>
+                                <input type="password" name="password" id="password" placeholder="••••••••" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" required>
+                            </div>
+                            <button type="submit" onclick="submitLoginUser()" class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Zaloguj</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div> 
+
+
+        <script>
+            function redirectToCategory() {
+                var category = document.getElementById('product-category').textContent;
+                location.href = '/category/' + category;
+            }
+
+          document.addEventListener('DOMContentLoaded', (event) => {
+              // Pobieranie slugu produktu z adresu URL
+              const pathArray = window.location.pathname.split('/');
+              const productSlug = pathArray[pathArray.length - 1]; // Zakładając, że adres URL ma postać /products/slug
+
+              // Tworzenie adresu URL do endpointu JSON
+              const url = `/products/${productSlug}/data`;
+
+              // Wykonywanie żądania AJAX do pobrania danych produktu
+              fetch(url)
+                  .then(response => response.json())
+                  .then(data => {
+                        if (!data.error) {
+                          // Wstawianie danych produktu do dokumentu HTML
+                          document.getElementById('product-name').textContent = data.name;
+                          document.getElementById('product-category').textContent = data.category;
+                          document.getElementById('product-price').textContent = data.price + ' zł';
+                          document.getElementById('product-desc-long').textContent = data.descLong;
+                          document.getElementById('product-date').textContent = data.date;
+                          document.getElementById('product-enddate').textContent = data.endDate;
+                          document.getElementById('product-delivery').textContent = data.delivery;
+                          document.getElementById('product-delivery-cost').textContent = 'Koszt Dostawy: ' + data.deliveryCost + ' zł';
+                          document.getElementById('product-manager').textContent = 'Sprzedawca: ' + data.manager;
+                          document.getElementById('product-manager-phone').textContent = 'Numer Telefonu Sprzedawcy: ' + '+48 ' + data.manager_phone;
+
+                          // Wstawianie obrazów produktu
+                        setTimeout(function() {
+                            const imagesContainer = document.getElementById('product-images');
+                            data.images.forEach((img, index) => {
+                                let imgWrapper = document.createElement('div');
+                                
+                                if (index === 0) {
+                                    imgWrapper.className = "relative float-left -mr-[100%] w-full !transform-none opacity-0 transition-opacity duration-[600ms] ease-in-out motion-reduce:transition-none";
+                                    imgWrapper.toggleAttribute('data-te-carousel-fade');
+                                    imgWrapper.toggleAttribute('data-te-carousel-item');
+                                    imgWrapper.toggleAttribute('data-te-carousel-active');
+
+                                } else {
+                                    imgWrapper.className = "relative float-left -mr-[100%] hidden w-full !transform-none opacity-0 transition-opacity duration-[600ms] ease-in-out motion-reduce:transition-none"; 
+                                    imgWrapper.toggleAttribute('data-te-carousel-fade');
+                                    imgWrapper.toggleAttribute('data-te-carousel-item');
+                                }
+
+                                let imgElement = document.createElement('img');
+                                imgElement.src = '/' + img.path;
+                                imgpath2 = '/' + img.path;
+                                imgElement.alt = img.name;
+                                imgElement.className = "block w-100"; // Klasy dla pozycjonowania obrazu
+
+
+                                imgWrapper.appendChild(imgElement);
+                                imagesContainer.appendChild(imgWrapper);
+
+                        }, 50); // Opóźnienie na przykład o 500 ms
+
+                        setTimeout(function() {
+                                var script = document.createElement('script');
+                                script.type = 'text/javascript';
+                                script.src = '/static/assets/home/js/tw-elements.umd.min.js';
+                                document.body.appendChild(script);
+                        }, 200); // Opóźnienie na przykład o 500 ms
+
+
+                        // Pobieranie kontenera dla przycisków
+                        const actionsContainer = document.querySelector('.actions-container'); // Zaktualizuj selektor według swojego kodu HTML
+                        actionsContainer.innerHTML = '';
+
+                        if (data.archived == 1) {
+                            let archivedtext = document.createElement('p');
+                            archivedtext.className = "text-lg font-semibold transition-all duration-900 ease-in-out";
+                            archivedtext.innerHTML = '<div class="text-lg font-semibold transition-all duration-900 ease-in-out">PRODUKT ZARCHIWIZOWANY</div>';
+                            actionsContainer.appendChild(archivedtext);
+                        }
+                        else {
+                            if ("{{id}}" && "{{id}}" !== "0") {
+                                  // Tworzenie przycisku Kup Teraz, jeśli buyNow to 1
+                                  if (data.buyNow === 1) {
+                                      let buyNowButton = document.createElement('button');
+                                      buyNowButton.className = "p-1 category-tile text-white text-center rounded-lg hover:bg-blue-600 transition-all duration-900 ease-in-out";
+                                      buyNowButton.innerHTML = '<div class="text-lg font-semibold transition-all duration-900 ease-in-out">Kup Teraz</div>';
+
+                                      // Dodanie obsługi zdarzeń kliknięcia
+                                      buyNowButton.addEventListener('click', function() {
+                                          console.log("Przycisk 'Kup Teraz' wciśnięty. Argumenty:", "{{id}}", data.manager_id, data.id, data.name, data.price, data.deliveryCost);
+                                          buytit("{{id}}", data.manager_id, data.id, data.name, data.price, data.deliveryCost);
+                                      });
+
+                                      actionsContainer.appendChild(buyNowButton);
+                                  }
+
+                                 // Tworzenie przycisku Licytuj, jeśli auction to 1
+                                  if (data.auction === 1) {
+                                      let auctionButton = document.createElement('button');
+                                      auctionButton.className = "p-1 category-tile text-white text-center rounded-lg hover:bg-blue-600 transition-all duration-900 ease-in-out";
+                                      auctionButton.innerHTML = '<div class="text-lg font-semibold transition-all duration-900 ease-in-out">Licytuj</div>';
+                                      let bidderText = document.createElement('p');
+                                      bidderText.className = "text-lg font-semibold transition-all duration-900 ease-in-out";
+                                      bidderText.innerHTML = `<div class="text-md font-semibold transition-all duration-900 ease-in-out">Aukcję Wygrywa : ${data.currentbidder}</div>`;
+                                      
+
+                                      // Dodanie obsługi zdarzeń kliknięcia
+                                      auctionButton.addEventListener('click', function() {
+                                          console.log("Przycisk 'Licytuj' wciśnięty. Argumenty:", "{{id}}", data.manager_id, data.id, data.name, data.price, data.deliveryCost);
+                                          bidtit("{{id}}", data.manager_id, data.id, data.name, data.price, data.deliveryCost);
+                                      });
+
+                                      actionsContainer.appendChild(auctionButton);
+                                      actionsContainer.appendChild(bidderText);
+                                  }
+                                  
+                              }
+                              else {
+                                  // Wyświetlenie komunikatu o konieczności zalogowania
+                                  let loginMessage = document.createElement('div');
+                                  loginMessage.textContent = "Zaloguj się, aby kupić/licytować";
+                                  loginMessage.className = "text-center text-red-500"; // Stylizacja
+                                  actionsContainer.appendChild(loginMessage);
+                              }
+                        }
+
+                        function buytit(userId, managerId, productId, dataName, dataPrice, dataDelivery) {
+                          Price = parseFloat(dataPrice);
+                          Delivery = parseFloat(dataDelivery);
+                          Name = dataName.toString(); 
+                            // Sprawdzenie, czy użytkownik próbuje kupić swój własny produkt
+                            if (userId === managerId.toString()) {
+                                Swal.fire({
+                                    title: 'Błąd',
+                                    text: 'Nie możesz kupić swojego produktu...',
+                                    icon: 'error',
+                                    confirmButtonText: 'OK'
+                                });
+                                return;
+                            }
+
+                            // Wyświetlenie okna dialogowego z potwierdzeniem
+                            Swal.fire({
+                                title: 'Potwierdzenie zakupu',
+                                html: `<p class="text-white">Czy na pewno chcesz kupić produkt: <b>${Name}</b> za cenę ${Price + Delivery} zł (łącznie z dostawą)?</br>\n\nZapoznaj się z <a href="/rules">regulaminem</a> i <a href="/rodo">RODO</a>.</p>`,
+                                icon: 'warning',
+                                showCancelButton: true,
+                                confirmButtonText: 'Tak, kupuję',
+                                cancelButtonText: 'Nie, rezygnuję'
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    // Przygotowanie danych do wysłania
+                                    let payload = {
+                                        buyerID: userId,
+                                        sellerID: managerId,
+                                        productID: productId,
+                                        purchaseDate: new Date().toISOString().split('T')[0], // Format RRRR-MM-DD
+                                        status: "Zakupione"
+                                    };
+
+                                    // Wysyłanie żądania do serwera
+                                    fetch('/buy', {
+                                        method: 'POST',
+                                        body: JSON.stringify(payload),
+                                        headers: {
+                                            'Content-Type': 'application/json'
+                                        }
+                                    })
+                                    .then(response => {
+                                        if (!response.ok) {
+                                            throw new Error('Network response was not ok');
+                                        }
+                                        return response.json();
+                                    })
+                                    .then(data => {
+                                        Swal.fire({
+                                            title: 'Sukces',
+                                            text: 'Produkt został kupiony',
+                                            icon: 'success',
+                                            confirmButtonText: 'OK'
+                                        });
+                                        location.reload();
+                                    })
+                                    .catch(error => {
+                                        console.error('Coś poszło nie tak z zakupem produktu, jeśli błąd się powtarza, skontaktuj się z Administracją oraz Sprzedawcą:', error);
+                                        Swal.fire({
+                                            title: 'Błąd',
+                                            text: 'Coś poszło nie tak z zakupem produktu, jeśli błąd się powtarza, skontaktuj się z Administracją oraz Sprzedawcą',
+                                            icon: 'error',
+                                            confirmButtonText: 'OK'
+                                        });
+                                    });
+                                }
+                            });
+                        }
+
+                       function bidtit(userId, managerId, productId, dataName, dataPrice, dataDelivery) {
+                          let Price = parseFloat(dataPrice);
+                          let Delivery = parseFloat(dataDelivery);
+                          let Name = dataName.toString();
+
+                          // Sprawdzenie, czy użytkownik próbuje kupić swój własny produkt
+                          if (userId === managerId.toString()) {
+                              Swal.fire({
+                                  title: 'Błąd',
+                                  text: 'Nie możesz licytować swojego produktu...',
+                                  icon: 'error',
+                                  confirmButtonText: 'OK'
+                              });
+                              return;
+                          }
+
+                          // Prośba o podanie nowej ceny
+                          Swal.fire({
+                              title: 'Podaj swoją ofertę',
+                              text: `Aktualna cena produktu: ${Price} zł. Ile chcesz zaoferować?`,
+                              input: 'text',
+                              inputAttributes: {
+                                  autocapitalize: 'off',
+                                  style: 'color: black;'
+                              },
+                              showCancelButton: true,
+                              confirmButtonText: 'Zaoferuj',
+                              showLoaderOnConfirm: true,
+                              preConfirm: (newPrice) => {
+                                  newPrice = parseFloat(newPrice);
+                                  if (isNaN(newPrice) || newPrice <= Price) {
+                                      Swal.showValidationMessage(`Oferta musi być wyższa niż aktualna cena: ${Price} zł`);
+                                      return false;
+                                  }
+                                  return newPrice;
+                              },
+                              allowOutsideClick: () => !Swal.isLoading()
+                          }).then((result) => {
+                              if (result.isConfirmed && result.value) {
+                                  let newPrice = result.value;
+                                  // Potwierdzenie licytacji
+                                  Swal.fire({
+                                      title: 'Potwierdzenie licytacji',
+                                      html: `<p class="text-white">Czy na pewno chcesz podbić cenę produktu: <b>${Name}</b> do ${newPrice} zł (${newPrice + Delivery} zł łącznie z dostawą)?</p>`,
+                                      icon: 'warning',
+                                      showCancelButton: true,
+                                      confirmButtonText: 'Tak, licytuję',
+                                      cancelButtonText: 'Nie, rezygnuję'
+                                  }).then((confirmResult) => {
+                                      if (confirmResult.isConfirmed) {
+                                          // Przygotowanie danych do wysłania
+                                          let bidPrice = newPrice.toString();
+                                          let payload = {
+                                              buyerID: userId,
+                                              sellerID: managerId,
+                                              productID: productId,
+                                              purchaseDate: new Date().toISOString().split('T')[0], // Format RRRR-MM-DD
+                                              status: "Aktywna",
+                                              newPrice: bidPrice
+                                          };
+
+                                          // Wysyłanie żądania do serwera
+                                          fetch('/bid', {
+                                              method: 'POST',
+                                              body: JSON.stringify(payload),
+                                              headers: {
+                                                  'Content-Type': 'application/json'
+                                              }
+                                          })
+                                          .then(response => {
+                                              if (!response.ok) {
+                                                  throw new Error('Network response was not ok');
+                                              }
+                                              return response.json();
+                                          })
+                                          .then(data => {
+                                              Swal.fire({
+                                                  title: 'Sukces',
+                                                  text: 'Twoja oferta została złożona',
+                                                  icon: 'success',
+                                                  confirmButtonText: 'OK'
+                                              });
+                                              location.reload();
+                                          })
+                                          .catch(error => {
+                                              console.error('Coś poszło nie tak z licytacją, skontaktuj się z Administracją:', error);
+                                              Swal.fire({
+                                                  title: 'Błąd',
+                                                  text: 'Coś poszło nie tak z licytacją, skontaktuj się z Administracją',
+                                                  icon: 'error',
+                                                  confirmButtonText: 'OK'
+                                              });
+                                          });
+                                      }
+                                  });
+                              }
+                          });
+                        }
+
+
+
+
+                          });
+                      } else {
+                          console.error('Product not found');
+                      }
+                  })
+                  .catch(error => console.error('Error:', error));
+          });
+      </script>
+              <script>
+                document.getElementById('loginForm').addEventListener('submit', function(event) {
+                    event.preventDefault(); // Zapobiega domyślnemu wysłaniu formularza
+                    submitLoginUser();
+                  });
+      
+                function submitLoginUser() {
+                  const formData = new FormData(document.getElementById('loginForm'));
+                  fetch('/login', {
+                    method: 'POST',
+                    body: JSON.stringify(Object.fromEntries(formData)),
+                    headers: {
+                      'Content-Type': 'application/json'
+                    }
+                  })
+                  .then(response => response.json())
+                  .then(data => {
+                    Swal.fire({
+                      title: data.status === 'success' ? 'Zalogowano' : 'Błąd',
+                      text: data.message,
+                      icon: data.status === 'success' ? 'success' : 'error',
+                      confirmButtonText: 'OK',
+                      color: '#DEECF9',
+                    }).then((result) => {
+                      if (data.status === "success") {
+                        location.href = "/";
+                      }
+                    });
+                  })
+                  .catch(error => {
+                    console.error('Błąd podczas logowania:', error);
+                    Swal.fire({
+                      title: 'Błąd',
+                      text: 'Wystąpił problem z połączeniem.',
+                      icon: 'error',
+                      confirmButtonText: 'OK',
+                      color: '#DEECF9',
+                    });
+                  });
+                }
+              </script>
+
+
+        <script type="text/javascript" src="/static/assets/home/js/darkmode.js"></script>
+        <script type="text/javascript" src="/static/assets/home/js/main.js"></script>
+        
+    </body>
+</html>

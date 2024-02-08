@@ -1,0 +1,64 @@
+.banner {
+  max-height: 240px;  
+}
+.banner img {
+  max-height: 512px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  object-fit: cover;
+}
+
+
+
+@media (min-width: 1024px) {
+  .custom-banner {
+      margin-top: -248px;
+  }
+}
+
+.custom-sticky {
+  position: -webkit-sticky;
+  position: sticky;
+  top: 4rem;
+}
+
+.category-tile {
+  background: linear-gradient(45deg, #FF0080, #7928CA);
+  transition: background 0.3s ease-in-out, transform 0.3s ease-in-out;
+}
+
+.category-tile:hover {
+  background: linear-gradient(45deg, #7928CA, #FF0080);
+  transform: scale(1.03); /* Subtelne powiększenie elementu przy hover */
+}
+
+.content ul {
+  max-width: 100%;
+  margin-bottom: 1rem;
+  list-style-type: disc;
+  padding-left: 1.25rem;
+}
+
+.content ol {
+  max-width: 100%;
+  margin-bottom: 1rem;
+  list-style-type: decimal;
+  padding-left: 1.25rem;
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 1023px) {
+/* Dla ekranów o szerokości 1023px i mniejszej */
+.flex {
+  flex-direction: column; /* Kontenery main i aside będą pod sobą */
+}
+.ml-8 {
+  margin-left: 0; /* Usunięcie marginesu na prawo, aby aside był pełnej szerokości */
+}
+.mt-5 {
+  margin-top: 1.25rem; /* Dodanie odstępu pomiędzy main a aside */
+}
+}
